@@ -1,6 +1,8 @@
 
 package org.usfirst.frc.team4634.robot;
 import edu.wpi.first.wpilibj.IterativeRobot;
+import java.io.IOException;
+import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.command.Command;
@@ -23,6 +25,7 @@ public class Robot extends IterativeRobot {
 
 	public static final ExampleSubsystem exampleSubsystem = new ExampleSubsystem();
 	public static OI oi;
+	private final NetworkTable grip = NetworkTable.getTable("grip");
 
     Command autonomousCommand;
     SendableChooser chooser;
@@ -34,6 +37,7 @@ public class Robot extends IterativeRobot {
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
+    @Override
     public void robotInit() {
     	myRobot = new RobotDrive(0,1);
     	stick = new Joystick(1);
@@ -43,6 +47,12 @@ public class Robot extends IterativeRobot {
         chooser.addDefault("Default Auto", new ExampleCommand());
 //        chooser.addObject("My Auto", new MyAutoCommand());
         SmartDashboard.putData("Auto mode", chooser);
+        /* Run GRIP in a new process */
+        try {
+            new ProcessBuilder("/home/lvuser/grip").inheritIO().start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 	
 	/**
@@ -92,6 +102,10 @@ public class Robot extends IterativeRobot {
         Scheduler.getInstance().run();
         if (timer.get() < 15.0) {
         	System.out.println("AUTONOMOUS MODE ACTIVATED");
+        }
+        /* Get published values from GRIP using NetworkTables */
+        for (double area : grip.getNumberArray("targets/area", new double[0])) {
+            System.out.println("Got contour with area=" + area);
         }
     }
 
