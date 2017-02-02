@@ -1,4 +1,4 @@
-package org.gosparx.team1126.robot.sensors;
+package org.usfirst.frc.team4634.robot;
 
 import edu.wpi.first.wpilibj.AnalogInput;
 
@@ -28,7 +28,7 @@ public abstract class UltrasonicRangeFinder {
 	 * @param device - the analog input the range finder is in
 	 * @param voltsPerInch - the volts the analog reading changes per inch
 	 */
-	public UltrasonicRangeFinder(AnalogInput device, double voltsPerInch){
+	public UltrasonicRangeFinder(AnalogInput device, double voltsPerInch) {
 		sensor = device;
 		this.voltsPerInch = voltsPerInch;
 		zeroPos = 0;

@@ -69,9 +69,7 @@ public class Robot extends IterativeRobot {
 	 */
     public void autonomousInit() {
         autonomousCommand = (Command) chooser.getSelected();
-        timer.reset();
-        timer.start();
-        
+                
 		/* String autoSelected = SmartDashboard.getString("Auto Selector", "Default");
 		switch(autoSelected) {
 		case "My Auto":
@@ -111,6 +109,30 @@ public class Robot extends IterativeRobot {
     public void teleopPeriodic() {
         Scheduler.getInstance().run();
         myRobot.arcadeDrive(stick);
+    }
+    
+    public void driveForTime(double time) {
+    	timer.reset();
+        timer.start();
+    	while (timer.get() < time) {
+    		myRobot.drive(0.75, 0.0);
+    	}
+    }
+    
+    public void driveUntilClose(double range) {
+    	
+    }
+    
+    public void reverse(double time) {
+    	timer.reset();
+        timer.start();
+    	while (timer.get() < time) {
+    		myRobot.drive(-0.75, 0.0);
+    	}
+    }
+    
+    public void stop() {
+    	myRobot.drive(0.0, 0.0);
     }
     
     /**
