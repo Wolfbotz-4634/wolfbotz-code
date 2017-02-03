@@ -1,5 +1,6 @@
 
 package org.usfirst.frc.team4634.robot;
+import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import java.io.IOException;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
@@ -13,6 +14,7 @@ import org.usfirst.frc.team4634.robot.commands.ExampleCommand;
 import org.usfirst.frc.team4634.robot.subsystems.ExampleSubsystem;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.AnalogInput;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -32,6 +34,8 @@ public class Robot extends IterativeRobot {
     RobotDrive myRobot;
     Joystick stick;
     Timer timer;
+    UltrasonicRangeFinder rangefinder;
+    AnalogInput sensor;
 
     /**
      * This function is run when the robot is first started up and should be
@@ -45,6 +49,7 @@ public class Robot extends IterativeRobot {
 		oi = new OI();
         chooser = new SendableChooser();
         chooser.addDefault("Default Auto", new ExampleCommand());
+        rangefinder = new UltrasonicRangeFinder(sensor, 1.0);
 //        chooser.addObject("My Auto", new MyAutoCommand());
         SmartDashboard.putData("Auto mode", chooser);
         /* Run GRIP in a new process */
@@ -100,9 +105,6 @@ public class Robot extends IterativeRobot {
      */
     public void autonomousPeriodic() {
         Scheduler.getInstance().run();
-        if (timer.get() < 15.0) {
-        	System.out.println("AUTONOMOUS MODE ACTIVATED");
-        }
         /* Get published values from GRIP using NetworkTables */
         for (double area : grip.getNumberArray("targets/area", new double[0])) {
             System.out.println("Got contour with area=" + area);
