@@ -30,10 +30,11 @@ public class Robot extends IterativeRobot {
     Command autonomousCommand;
     SendableChooser chooser;
     RobotDrive myRobot;
-    XboxController xbox;
     Timer timer;
     UltrasonicRangeFinder rangefinder;
     AnalogInput sensor;
+    XboxController driveXbox;
+    XboxController mechanismXbox;
 
     /**
      * This function is run when the robot is first started up and should be
@@ -42,12 +43,13 @@ public class Robot extends IterativeRobot {
     @Override
     public void robotInit() {
     	myRobot = new RobotDrive(0,1);
-    	xbox = new XboxController(1);
     	timer = new Timer();
 		oi = new OI();
         chooser = new SendableChooser();
         chooser.addDefault("Default Auto", new ExampleCommand());
-        rangefinder = new UltrasonicRangeFinder(sensor, 1.0);
+        rangefinder = new RangeFinding(sensor);
+        driveXbox = new XboxController(0);
+        mechanismXbox = new XboxController(1);
 //        chooser.addObject("My Auto", new MyAutoCommand());
         SmartDashboard.putData("Auto mode", chooser);
         /* Run GRIP in a new process */
@@ -56,30 +58,15 @@ public class Robot extends IterativeRobot {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
+    }	
 	
-	/**
-     * This function is called once each time the robot enters Disabled mode.
-     * You can use it to reset any subsystem information you want to clear when
-	 * the robot is disabled.
-     */
     public void disabledInit(){
 
-    }
-	
+    }	
 	public void disabledPeriodic() {
 		Scheduler.getInstance().run();
 	}
 
-	/**
-	 * This autonomous (along with the chooser code above) shows how to select between different autonomous modes
-	 * using the dashboard. The sendable chooser code works with the Java SmartDashboard. If you prefer the LabVIEW
-	 * Dashboard, remove all of the chooser code and uncomment the getString code to get the auto name from the text box
-	 * below the Gyro
-	 *
-	 * You can add additional auto modes by adding additional commands to the chooser code above (like the commented example)
-	 * or additional comparisons to the switch structure below with additional strings & commands.
-	 */
     public void autonomousInit() {
         autonomousCommand = (Command) chooser.getSelected();
                 
@@ -98,15 +85,13 @@ public class Robot extends IterativeRobot {
         if (autonomousCommand != null) autonomousCommand.start();
     }
 
-    /**
-     * This function is called periodically during autonomous
-     */
     public void autonomousPeriodic() {
         Scheduler.getInstance().run();
         /* Get published values from GRIP using NetworkTables */
         for (double area : grip.getNumberArray("targets/area", new double[0])) {
             System.out.println("Got contour with area=" + area);
         }
+        rangefinder.getRange();
     }
 
     public void teleopInit() {
@@ -117,14 +102,21 @@ public class Robot extends IterativeRobot {
         if (autonomousCommand != null) autonomousCommand.cancel();
     }
 
-    /**
-     * This function is called periodically during operator control
-     */
     public void teleopPeriodic() {
         Scheduler.getInstance().run();
-        myRobot.arcadeDrive(xbox);
+        mechanismXbox.x.whenPressed(unlock());
+        mechanismXbox.b.whenPressed(lock());
     }
-    
+
+    public void unlock() {
+        //unlocks mechanism for gears
+    }
+
+    public void lock() {
+        //locks mechanism for gears
+    }
+
+    //drives forward for a specified amount of time
     public void driveForTime(double time) {
     	timer.reset();
         timer.start();
@@ -137,6 +129,7 @@ public class Robot extends IterativeRobot {
     	
     }
     
+    //drives in reverse for a specified amount of time
     public void reverse(double time) {
     	timer.reset();
         timer.start();
@@ -148,10 +141,7 @@ public class Robot extends IterativeRobot {
     public void stop() {
     	myRobot.drive(0.0, 0.0);
     }
-    
-    /**
-     * This function is called periodically during test mode
-     */
+
     public void testPeriodic() {
         LiveWindow.run();
     }
