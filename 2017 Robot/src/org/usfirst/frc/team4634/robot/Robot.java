@@ -1,10 +1,8 @@
-
 package org.usfirst.frc.team4634.robot;
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import java.io.IOException;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
-import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.Timer;
@@ -32,7 +30,7 @@ public class Robot extends IterativeRobot {
     Command autonomousCommand;
     SendableChooser chooser;
     RobotDrive myRobot;
-    Joystick stick;
+    XboxController xbox;
     Timer timer;
     UltrasonicRangeFinder rangefinder;
     AnalogInput sensor;
@@ -44,7 +42,7 @@ public class Robot extends IterativeRobot {
     @Override
     public void robotInit() {
     	myRobot = new RobotDrive(0,1);
-    	stick = new Joystick(1);
+    	xbox = new XboxController(1);
     	timer = new Timer();
 		oi = new OI();
         chooser = new SendableChooser();
@@ -124,7 +122,7 @@ public class Robot extends IterativeRobot {
      */
     public void teleopPeriodic() {
         Scheduler.getInstance().run();
-        myRobot.arcadeDrive(stick);
+        myRobot.arcadeDrive(xbox);
     }
     
     public void driveForTime(double time) {
