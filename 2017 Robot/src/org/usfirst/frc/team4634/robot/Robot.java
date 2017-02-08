@@ -103,8 +103,8 @@ public class Robot extends IterativeRobot {
         Scheduler.getInstance().run();
         double rightX = driveXbox.getX2();
         double leftX = driveXbox.getX1();
-        myRobot.arcadeDrive(throttle, rightX, true);
-        middleMotor.set(leftX);
+        myRobot.arcadeDrive(throttle, leftX, true);
+        middleMotor.set(rightX);
         /*while (driveXbox.getLeftTrigger() > 0.0) { 
         	middleMotor.set(leftX);
         }
