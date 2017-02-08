@@ -104,8 +104,10 @@ public class Robot extends IterativeRobot {
 
     public void teleopPeriodic() {
         Scheduler.getInstance().run();
-        mechanismXbox.x.whenPressed(unlock());
-        mechanismXbox.b.whenPressed(lock());
+        double rightX = driveXbox.getX2();
+        double leftX = driveXbox.getX1();
+        double rightY = driveXbox.getY2();
+        double leftY = driveXbox.getY1();
     }
 
     public void unlock() {
@@ -126,7 +128,9 @@ public class Robot extends IterativeRobot {
     }
     
     public void driveUntilClose(double range) {
-    	
+    	while (rangefinder.getRange() > 10.0) {
+    		myRobot.drive(0.75, 0.0);
+    	}
     }
     
     //drives in reverse for a specified amount of time

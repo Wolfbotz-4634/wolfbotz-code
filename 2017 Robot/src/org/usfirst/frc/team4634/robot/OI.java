@@ -1,15 +1,5 @@
 package org.usfirst.frc.team4634.robot;
 
-import edu.wpi.first.wpilibj.buttons.Button;
-import org.usfirst.frc.team4634.robot.commands.ExampleCommand;
-import com.explodingbacon.robot.Robot.ControlType;
-import com.explodingbacon.robot.commands.QuickCommand;
-import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.buttons.Button;
-import edu.wpi.first.wpilibj.buttons.InternalButton;
-import edu.wpi.first.wpilibj.buttons.JoystickButton;
-import edu.wpi.first.wpilibj.command.Command;
-
 public class OI {
 	/**
  * This class is the glue that binds the controls on the physical operator

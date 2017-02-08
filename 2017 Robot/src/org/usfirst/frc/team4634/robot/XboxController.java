@@ -3,6 +3,7 @@ package org.usfirst.frc.team4634.robot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.buttons.Button;
 import edu.wpi.first.wpilibj.buttons.JoystickButton;
+import edu.wpi.first.wpilibj.Timer;
 
 public class XboxController extends Joystick {
 
@@ -96,17 +97,6 @@ public class XboxController extends Joystick {
 	 * @param r The right rumble value.
 	 * @param seconds How long the controller should rumble.
 	 */
-	public void rumble(float l, float r, double seconds) {
-		rumble(l, r);
-		rumbleTimer = new Timer(seconds, false, new TimerUser() {
-			public void timer() {
-				rumble(0, 0);
-			}
-			public void timerStop() {
-				rumbleTimer = null;
-			}
-		}).start();
-	}
 	
 	public enum Direction {
 		UP(0),
