@@ -12,7 +12,9 @@ import org.usfirst.frc.team4634.robot.commands.ExampleCommand;
 import org.usfirst.frc.team4634.robot.subsystems.ExampleSubsystem;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.AnalogInput;
+//import edu.wpi.first.wpilibj.AnalogInput;
+//import com.ctre.CANTalon;
+
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -35,14 +37,16 @@ public class Robot extends IterativeRobot {
     AnalogInput sensor;
     XboxController driveXbox;
     XboxController mechanismXbox;
+    /*CANTalon frontLeftMotor, frontRightMotor, rearLeftMotor, rearRightMotor;   */
 
-    /**
+    @SuppressWarnings("rawtypes")
+	/**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
     @Override
     public void robotInit() {
-    	myRobot = new RobotDrive(0,1);
+    	myRobot = new RobotDrive(1, 2, 3, 4);
     	timer = new Timer();
 		oi = new OI();
         chooser = new SendableChooser();
@@ -50,7 +54,15 @@ public class Robot extends IterativeRobot {
         rangefinder = new RangeFinding(sensor);
         driveXbox = new XboxController(0);
         mechanismXbox = new XboxController(1);
-//        chooser.addObject("My Auto", new MyAutoCommand());
+        
+        /*frontLeftMotor = new CANTalon(1);
+        frontRightMotor = new CANTalon(2);
+        rearLeftMotor = new CANTalon(3);
+        rearRightMotor = new CANTalon(4);
+        
+        frontLeftMotor.setInverted(true);
+        rearLeftMotor.setInverted(true);*/
+        
         SmartDashboard.putData("Auto mode", chooser);
         /* Run GRIP in a new process */
         try {
@@ -69,20 +81,11 @@ public class Robot extends IterativeRobot {
 
     public void autonomousInit() {
         autonomousCommand = (Command) chooser.getSelected();
-                
-		/* String autoSelected = SmartDashboard.getString("Auto Selector", "Default");
-		switch(autoSelected) {
-		case "My Auto":
-			autonomousCommand = new MyAutoCommand();
-			break;
-		case "Default Auto":
-		default:
-			autonomousCommand = new ExampleCommand();
-			break;
-		} */
     	
     	// schedule the autonomous command (example)
         if (autonomousCommand != null) autonomousCommand.start();
+        
+        driveForTime(5.0);
     }
 
     public void autonomousPeriodic() {
@@ -106,8 +109,10 @@ public class Robot extends IterativeRobot {
         Scheduler.getInstance().run();
         double rightX = driveXbox.getX2();
         double leftX = driveXbox.getX1();
-        double rightY = driveXbox.getY2();
+        //double rightY = driveXbox.getY2();
         double leftY = driveXbox.getY1();
+        
+        myRobot.mecanumDrive_Cartesian(leftX, leftY, rightX, 0);
     }
 
     public void unlock() {
@@ -120,6 +125,9 @@ public class Robot extends IterativeRobot {
 
     //drives forward for a specified amount of time
     public void driveForTime(double time) {
+    	if (rangefinder.getRange() < 10.0) {
+    		stop();
+    	}
     	timer.reset();
         timer.start();
     	while (timer.get() < time) {
