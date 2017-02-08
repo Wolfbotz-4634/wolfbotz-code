@@ -108,7 +108,7 @@ public class Robot extends IterativeRobot {
         double leftX = driveXbox.getX1();
         double rightY = driveXbox.getY2();
         double leftY = driveXbox.getY1();
-        if (driveXbox.getLeftTrigger() > 0.0) { 
+        while (driveXbox.getLeftTrigger() > 0.0) { 
         	middleMotor.set(leftX);
         }
         myRobot.tankDrive(leftY, rightY);
