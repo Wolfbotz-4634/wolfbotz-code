@@ -77,11 +77,9 @@ public class Robot extends IterativeRobot {
 	}
 
     public void autonomousInit() {
-        autonomousCommand = (Command) chooser.getSelected();
-    	
+        autonomousCommand = (Command) chooser.getSelected();    	
     	// schedule the autonomous command (example)
-        if (autonomousCommand != null) autonomousCommand.start();
-        
+        if (autonomousCommand != null) autonomousCommand.start();        
         driveForTime(5.0);
     }
 
@@ -91,7 +89,6 @@ public class Robot extends IterativeRobot {
         for (double area : grip.getNumberArray("targets/area", new double[0])) {
             System.out.println("Got contour with area=" + area);
         }
-        rangefinder.getRange();
     }
 
     public void teleopInit() {
@@ -106,12 +103,23 @@ public class Robot extends IterativeRobot {
         Scheduler.getInstance().run();
         double rightX = driveXbox.getX2();
         double leftX = driveXbox.getX1();
-        double rightY = driveXbox.getY2();
-        double leftY = driveXbox.getY1();
-        while (driveXbox.getLeftTrigger() > 0.0) { 
+        myRobot.arcadeDrive(throttle, rightX, true);
+        middleMotor.set(leftX);
+        /*while (driveXbox.getLeftTrigger() > 0.0) { 
         	middleMotor.set(leftX);
         }
-        myRobot.tankDrive(leftY, rightY);
+        myRobot.tankDrive(leftY, rightY);*/
+    }
+
+    //controls throttle: right trigger to go forward, left trigger to reverse
+    public double throttle() {
+        if (driveXbox.getRightTrigger() > 0.1) {
+            return (driveXbox.getRightTrigger());
+        } else if (driveXbox.getLeftTrigger() > 0.1){
+            return(-driveXbox.getLeftTrigger());
+        } else {
+            return 0;
+        }
     }
 
     public void unlock() {
@@ -134,10 +142,12 @@ public class Robot extends IterativeRobot {
     	}
     }
     
+    //drives forward until the robot is within 10 inches of the object in front of it
     public void driveUntilClose(double range) {
     	while (rangefinder.getRange() > 10.0) {
     		myRobot.drive(0.75, 0.0);
     	}
+        stop();
     }
     
     //drives in reverse for a specified amount of time
