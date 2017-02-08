@@ -13,7 +13,7 @@ import org.usfirst.frc.team4634.robot.subsystems.ExampleSubsystem;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 //import edu.wpi.first.wpilibj.AnalogInput;
-//import com.ctre.CANTalon;
+import com.ctre.CANTalon;
 
 
 /**
@@ -37,7 +37,7 @@ public class Robot extends IterativeRobot {
     AnalogInput sensor;
     XboxController driveXbox;
     XboxController mechanismXbox;
-    /*CANTalon frontLeftMotor, frontRightMotor, rearLeftMotor, rearRightMotor;   */
+    CANTalon leftMotor, rightMotor, middleMotor;
 
     @SuppressWarnings("rawtypes")
 	/**
@@ -46,7 +46,7 @@ public class Robot extends IterativeRobot {
      */
     @Override
     public void robotInit() {
-    	myRobot = new RobotDrive(1, 2, 3, 4);
+    	myRobot = new RobotDrive(1, 2);
     	timer = new Timer();
 		oi = new OI();
         chooser = new SendableChooser();
@@ -55,13 +55,10 @@ public class Robot extends IterativeRobot {
         driveXbox = new XboxController(0);
         mechanismXbox = new XboxController(1);
         
-        /*frontLeftMotor = new CANTalon(1);
-        frontRightMotor = new CANTalon(2);
-        rearLeftMotor = new CANTalon(3);
-        rearRightMotor = new CANTalon(4);
-        
-        frontLeftMotor.setInverted(true);
-        rearLeftMotor.setInverted(true);*/
+        /*leftMotor = new CANTalon(1);
+        rightMotor = new CANTalon(2);*/
+        middleMotor = new CANTalon(3);
+        leftMotor.setInverted(true);
         
         SmartDashboard.putData("Auto mode", chooser);
         /* Run GRIP in a new process */
@@ -109,10 +106,12 @@ public class Robot extends IterativeRobot {
         Scheduler.getInstance().run();
         double rightX = driveXbox.getX2();
         double leftX = driveXbox.getX1();
-        //double rightY = driveXbox.getY2();
+        double rightY = driveXbox.getY2();
         double leftY = driveXbox.getY1();
-        
-        myRobot.mecanumDrive_Cartesian(leftX, leftY, rightX, 0);
+        if (driveXbox.getLeftTrigger() > 0.0) { 
+        	middleMotor.set(leftX);
+        }
+        myRobot.tankDrive(leftY, rightY);
     }
 
     public void unlock() {
