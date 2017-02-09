@@ -12,6 +12,7 @@ import org.usfirst.frc.team4634.robot.commands.ExampleCommand;
 import org.usfirst.frc.team4634.robot.subsystems.ExampleSubsystem;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import java.util.concurrent.TimeUnit;
 //import edu.wpi.first.wpilibj.AnalogInput;
 import com.ctre.CANTalon;
 
@@ -38,6 +39,7 @@ public class Robot extends IterativeRobot {
     XboxController driveXbox;
     XboxController mechanismXbox;
     CANTalon leftMotor, rightMotor, middleMotor;
+    boolean brakeYes;
 
     @SuppressWarnings("rawtypes")
 	/**
@@ -46,7 +48,7 @@ public class Robot extends IterativeRobot {
      */
     @Override
     public void robotInit() {
-    	myRobot = new RobotDrive(1, 2);
+    	myRobot = new RobotDrive(0,1);
     	timer = new Timer();
 		oi = new OI();
         chooser = new SendableChooser();
@@ -54,13 +56,12 @@ public class Robot extends IterativeRobot {
         rangefinder = new RangeFinding(sensor);
         driveXbox = new XboxController(0);
         mechanismXbox = new XboxController(1);
-        
-        /*leftMotor = new CANTalon(1);
-        rightMotor = new CANTalon(2);*/
-        middleMotor = new CANTalon(3);
+        brakeYes = true;
+        leftMotor = new CANTalon(1);
+        rightMotor = new CANTalon(0);
+        middleMotor = new CANTalon(2);
         leftMotor.setInverted(true);
-        
-        SmartDashboard.putData("Auto mode", chooser);
+        SmartDashboard.putData("Auto mode", chooser);        
         /* Run GRIP in a new process */
         try {
             new ProcessBuilder("/home/lvuser/grip").inheritIO().start();
@@ -96,15 +97,26 @@ public class Robot extends IterativeRobot {
         // teleop starts running. If you want the autonomous to 
         // continue until interrupted by another command, remove
         // this line or comment it out.
-        if (autonomousCommand != null) autonomousCommand.cancel();
+        if (autonomousCommand != null) autonomousCommand.cancel();        
     }
 
     public void teleopPeriodic() {
         Scheduler.getInstance().run();
         double rightX = driveXbox.getX2();
         double leftX = driveXbox.getX1();
-        myRobot.arcadeDrive(throttle, leftX, true);
+        myRobot.arcadeDrive(throttle(), leftX, true);
         middleMotor.set(rightX);
+        if (driveXbox.getRawButton(6)) {
+        	leftMotor.enableBrakeMode(! brakeYes);
+        	rightMotor.enableBrakeMode(! brakeYes);
+        	System.out.println(brakeYes);
+        	brakeYes = !brakeYes;
+        	try {
+        		TimeUnit.MILLISECONDS.sleep(100);
+        	} catch(Exception InterruptedException) {
+        		System.out.println("shit");
+        	}
+        }
         /*while (driveXbox.getLeftTrigger() > 0.0) { 
         	middleMotor.set(leftX);
         }
