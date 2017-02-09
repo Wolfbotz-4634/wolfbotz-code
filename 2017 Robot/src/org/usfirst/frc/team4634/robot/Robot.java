@@ -112,7 +112,7 @@ public class Robot extends IterativeRobot {
         	System.out.println(brakeYes);
         	brakeYes = !brakeYes;
         	try {
-        		TimeUnit.MILLISECONDS.sleep(100);
+        		TimeUnit.MILLISECONDS.sleep(200);
         	} catch(Exception InterruptedException) {
         		System.out.println("shit");
         	}
