@@ -2,7 +2,6 @@ package org.usfirst.frc.team4634.robot;
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import java.io.IOException;
-import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.Timer;
@@ -13,8 +12,15 @@ import org.usfirst.frc.team4634.robot.subsystems.ExampleSubsystem;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import java.util.concurrent.TimeUnit;
-//import edu.wpi.first.wpilibj.AnalogInput;
+import org.opencv.core.Rect;
+import org.opencv.imgproc.Imgproc;
+import edu.wpi.cscore.UsbCamera;
+import edu.wpi.first.wpilibj.CameraServer;
+//import edu.wpi.first.wpilibj.vision.VisionRunner;
+import edu.wpi.first.wpilibj.vision.VisionThread;
 import com.ctre.CANTalon;
+//import edu.wpi.first.wpilibj.AnalogInput;
+
 
 
 /**
@@ -28,7 +34,14 @@ public class Robot extends IterativeRobot {
 
 	public static final ExampleSubsystem exampleSubsystem = new ExampleSubsystem();
 	public static OI oi;
-	private final NetworkTable grip = NetworkTable.getTable("grip");
+	private static final int IMG_WIDTH = 320;
+	private static final int IMG_HEIGHT = 240;
+	
+	private VisionThread visionThread;
+	private double centerX = 0.0;
+	private RobotDrive drive;
+	
+	private final Object imgLock = new Object();
 
     Command autonomousCommand;
     SendableChooser chooser;
@@ -62,6 +75,18 @@ public class Robot extends IterativeRobot {
         middleMotor = new CANTalon(2);
         leftMotor.setInverted(true);
         SmartDashboard.putData("Auto mode", chooser);        
+        UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
+        camera.setResolution(IMG_WIDTH, IMG_HEIGHT);
+        
+        visionThread = new VisionThread(camera, new Pipeline(), pipeline -> {
+            if (!pipeline.filterContoursOutput().isEmpty()) {
+                Rect r = Imgproc.boundingRect(pipeline.filterContoursOutput().get(0));
+                synchronized (imgLock) {
+                    centerX = r.x + (r.width / 2);
+                }
+            }
+        });
+        visionThread.start();
         /* Run GRIP in a new process */
         try {
             new ProcessBuilder("/home/lvuser/grip").inheritIO().start();
@@ -86,10 +111,8 @@ public class Robot extends IterativeRobot {
 
     public void autonomousPeriodic() {
         Scheduler.getInstance().run();
-        /* Get published values from GRIP using NetworkTables */
-        for (double area : grip.getNumberArray("targets/area", new double[0])) {
-            System.out.println("Got contour with area=" + area);
-        }
+        
+        driveForTime(10);
     }
 
     public void teleopInit() {
@@ -140,6 +163,15 @@ public class Robot extends IterativeRobot {
 
     public void lock() {
         //locks mechanism for gears
+    }
+    
+    public void align() {
+    	double centerX;
+    	synchronized (imgLock) {
+    		centerX = this.centerX;
+    	}
+    	double turn = centerX - (IMG_WIDTH / 2);
+    	drive.arcadeDrive(-0.6, turn * 0.005);
     }
 
     //drives forward for a specified amount of time
