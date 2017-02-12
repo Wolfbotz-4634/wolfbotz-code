@@ -44,7 +44,7 @@ public class Robot extends IterativeRobot {
 	private final Object imgLock = new Object();
 
     Command autonomousCommand;
-    SendableChooser chooser;
+    Boolean gearPlaced;
     RobotDrive myRobot;
     Timer timer;
     UltrasonicRangeFinder rangefinder;
@@ -53,8 +53,10 @@ public class Robot extends IterativeRobot {
     XboxController mechanismXbox;
     CANTalon leftMotor, rightMotor, middleMotor;
     boolean brakeYes;
-
+    SendableChooser chooser;
+    
     @SuppressWarnings("rawtypes")
+    
 	/**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
@@ -65,6 +67,7 @@ public class Robot extends IterativeRobot {
     	timer = new Timer();
 		oi = new OI();
         chooser = new SendableChooser();
+        gearPlaced = true;
         chooser.addDefault("Default Auto", new ExampleCommand());
         rangefinder = new RangeFinding(sensor);
         driveXbox = new XboxController(0);
@@ -93,26 +96,40 @@ public class Robot extends IterativeRobot {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }	
-	
-    public void disabledInit(){
+    }
 
-    }	
-	public void disabledPeriodic() {
-		Scheduler.getInstance().run();
-	}
-
-    public void autonomousInit() {
+    public void autonomousInit() { //currently configured for far right side start
         autonomousCommand = (Command) chooser.getSelected();    	
     	// schedule the autonomous command (example)
         if (autonomousCommand != null) autonomousCommand.start();        
         driveForTime(5.0);
+        /*try {
+    		TimeUnit.SECONDS.sleep(5); //use this if autonomousperiodic prevents driveForTime from completing
+    	} catch(Exception InterruptedException) {
+    		System.out.println("shit wtf");
+    	}*/
+        
+        /* if middle start, remove all code in autonomousperiodic
+    	driveUntilClose(); 
+    	*/
     }
 
-    public void autonomousPeriodic() {
+    public void autonomousPeriodic() { 
         Scheduler.getInstance().run();
-        
-        driveForTime(10);
+        if (! gearPlaced) {
+        	double centerX;
+        	synchronized (imgLock) {
+        		centerX = this.centerX;
+        	}
+        	double turn = centerX - (IMG_WIDTH / 2);
+        	drive.arcadeDrive(0.6, turn * 0.005);
+        }
+    	if (rangefinder.getRange() < 10.0 && gearPlaced == false) {
+    		gearPlaced = true;
+    		myRobot.drive(0.0, 0.0);
+    		unlock();
+    		reverse(2.0);
+    	}    	
     }
 
     public void teleopInit() {
@@ -164,35 +181,18 @@ public class Robot extends IterativeRobot {
     public void lock() {
         //locks mechanism for gears
     }
-    
-    public void align() {
-    	double centerX;
-    	synchronized (imgLock) {
-    		centerX = this.centerX;
-    	}
-    	double turn = centerX - (IMG_WIDTH / 2);
-    	drive.arcadeDrive(-0.6, turn * 0.005);
-    }
 
     //drives forward for a specified amount of time
     public void driveForTime(double time) {
     	if (rangefinder.getRange() < 10.0) {
-    		stop();
+    		myRobot.drive(0.0, 0.0);
     	}
     	timer.reset();
         timer.start();
     	while (timer.get() < time) {
     		myRobot.drive(0.75, 0.0);
     	}
-    }
-    
-    //drives forward until the robot is within 10 inches of the object in front of it
-    public void driveUntilClose(double range) {
-    	while (rangefinder.getRange() > 10.0) {
-    		myRobot.drive(0.75, 0.0);
-    	}
-        stop();
-    }
+    }    
     
     //drives in reverse for a specified amount of time
     public void reverse(double time) {
@@ -202,10 +202,20 @@ public class Robot extends IterativeRobot {
     		myRobot.drive(-0.75, 0.0);
     	}
     }
-    
-    public void stop() {
-    	myRobot.drive(0.0, 0.0);
+
+    //drives forward until the robot is within 10 inches of the object in front of it
+    public void driveUntilClose(double range) {
+     while (rangefinder.getRange() > 10.0) {
+    	 myRobot.drive(0.75, 0.0);
+     }
+     myRobot.drive(0.0, 0.0);
     }
+      
+    public void disabledInit(){    	  
+    }	
+  	public void disabledPeriodic() {
+  		Scheduler.getInstance().run();
+  	}
 
     public void testPeriodic() {
         LiveWindow.run();
