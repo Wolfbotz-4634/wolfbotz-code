@@ -5,6 +5,7 @@ import java.io.IOException;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.VictorSP;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import org.usfirst.frc.team4634.robot.commands.ExampleCommand;
@@ -31,27 +32,27 @@ import com.ctre.CANTalon;
  * directory.
  */
 public class Robot extends IterativeRobot {
-
-	public static final ExampleSubsystem exampleSubsystem = new ExampleSubsystem();
 	public static OI oi;
+	public static final ExampleSubsystem exampleSubsystem = new ExampleSubsystem();
+	
+	//vars for vision processing
 	private static final int IMG_WIDTH = 320;
-	private static final int IMG_HEIGHT = 240;
-	
+	private static final int IMG_HEIGHT = 240;	
 	private VisionThread visionThread;
-	private double centerX = 0.0;
-	private RobotDrive drive;
-	
+	private double centerX = 0.0;	
 	private final Object imgLock = new Object();
-
+	Boolean gearPlaced;
+	
     Command autonomousCommand;
-    Boolean gearPlaced;
-    RobotDrive myRobot;
-    Timer timer;
-    UltrasonicRangeFinder rangefinder;
-    AnalogInput sensor;
-    XboxController driveXbox;
-    XboxController mechanismXbox;
-    CANTalon leftMotor, rightMotor, middleMotor;
+    
+    RobotDrive myRobot; //the robot's driving functionality
+    Timer timer; //a timer that counts in seconds
+    UltrasonicRangeFinder rangefinder; //the ultrasonic rangefinder, tells you how far the nearest object in front is
+    AnalogInput sensor; //the analog input of the rangefinder
+    XboxController driveXbox; //driver's controller
+    XboxController mechanismXbox; //mechanism control person's controller
+    VictorSP leftRear, leftFront, rightRear, rightFront;
+    CANTalon middleMotor; //middle strafing motor
     boolean brakeYes;
     SendableChooser chooser;
     
@@ -63,20 +64,19 @@ public class Robot extends IterativeRobot {
      */
     @Override
     public void robotInit() {
+    	chooser.addDefault("Default Auto", new ExampleCommand());
+    	chooser = new SendableChooser();
+    	oi = new OI();
+    	
     	myRobot = new RobotDrive(0,1);
-    	timer = new Timer();
-		oi = new OI();
-        chooser = new SendableChooser();
+    	timer = new Timer();        
         gearPlaced = true;
-        chooser.addDefault("Default Auto", new ExampleCommand());
+        
         rangefinder = new RangeFinding(sensor);
         driveXbox = new XboxController(0);
         mechanismXbox = new XboxController(1);
         brakeYes = true;
-        leftMotor = new CANTalon(1);
-        rightMotor = new CANTalon(0);
         middleMotor = new CANTalon(2);
-        leftMotor.setInverted(true);
         SmartDashboard.putData("Auto mode", chooser);        
         UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
         camera.setResolution(IMG_WIDTH, IMG_HEIGHT);
@@ -103,26 +103,34 @@ public class Robot extends IterativeRobot {
     	// schedule the autonomous command (example)
         if (autonomousCommand != null) autonomousCommand.start();        
         driveForTime(5.0);
-        /*try {
-    		TimeUnit.SECONDS.sleep(5); //use this if autonomousperiodic prevents driveForTime from completing
-    	} catch(Exception InterruptedException) {
-    		System.out.println("shit wtf");
-    	}*/
+        Timer turningTimer = new Timer();
+        turningTimer.reset();
+        turningTimer.start();
+        while (turningTimer.get() < 2.0) {
+        	myRobot.arcadeDrive(0.0, -1.0);
+        }
         
-        /* if middle start, remove all code in autonomousperiodic
-    	driveUntilClose(); 
+        /* if middle start, remove all code in autonomousperiodic pertaining to alignment, just use:
+    	while (rangefinder.getRange() > 10.0) {
+    		myRobot.drive(0.75, 0.0);
+     	}
+     	myRobot.drive(0.0, 0.0);
     	*/
     }
 
     public void autonomousPeriodic() { 
         Scheduler.getInstance().run();
+        /*this gets the centerX pixel value of the target and subtracts half the image width to change
+         *  it to a value that is zero when the rectangle is centered in the image and positive or negative when
+         *   the target center is on the left or right side of the frame. That value is used to steer the robot 
+         *   towards the target.*/
         if (! gearPlaced) {
         	double centerX;
         	synchronized (imgLock) {
         		centerX = this.centerX;
         	}
         	double turn = centerX - (IMG_WIDTH / 2);
-        	drive.arcadeDrive(0.6, turn * 0.005);
+        	myRobot.arcadeDrive(0.6, turn * 0.005);
         }
     	if (rangefinder.getRange() < 10.0 && gearPlaced == false) {
     		gearPlaced = true;
@@ -147,8 +155,6 @@ public class Robot extends IterativeRobot {
         myRobot.arcadeDrive(throttle(), leftX, true);
         middleMotor.set(rightX);
         if (driveXbox.getRawButton(6)) {
-        	leftMotor.enableBrakeMode(! brakeYes);
-        	rightMotor.enableBrakeMode(! brakeYes);
         	System.out.println(brakeYes);
         	brakeYes = !brakeYes;
         	try {
@@ -157,10 +163,6 @@ public class Robot extends IterativeRobot {
         		System.out.println("shit");
         	}
         }
-        /*while (driveXbox.getLeftTrigger() > 0.0) { 
-        	middleMotor.set(leftX);
-        }
-        myRobot.tankDrive(leftY, rightY);*/
     }
 
     //controls throttle: right trigger to go forward, left trigger to reverse
@@ -201,14 +203,6 @@ public class Robot extends IterativeRobot {
     	while (timer.get() < time) {
     		myRobot.drive(-0.75, 0.0);
     	}
-    }
-
-    //drives forward until the robot is within 10 inches of the object in front of it
-    public void driveUntilClose(double range) {
-     while (rangefinder.getRange() > 10.0) {
-    	 myRobot.drive(0.75, 0.0);
-     }
-     myRobot.drive(0.0, 0.0);
     }
       
     public void disabledInit(){    	  
