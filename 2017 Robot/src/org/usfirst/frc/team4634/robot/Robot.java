@@ -137,6 +137,7 @@ public class Robot extends IterativeRobot {
     		myRobot.drive(0.0, 0.0);
     		unlock();
     		reverse(2.0);
+    		lock();
     	}    	
     }
 
