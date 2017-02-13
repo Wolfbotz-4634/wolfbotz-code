@@ -1,22 +1,22 @@
 package org.usfirst.frc.team4634.robot;
 
-//import java.io.File;
-//import java.io.FileWriter;
-//import java.io.IOException;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-//import java.util.Map;
-//import java.util.stream.Collectors;
-//import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.HashMap;
 
 import edu.wpi.first.wpilibj.vision.VisionPipeline;
 
 import org.opencv.core.*;
-//import org.opencv.core.Core.*;
-//import org.opencv.features2d.FeatureDetector;
-//import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.core.Core.*;
+import org.opencv.features2d.FeatureDetector;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.*;
-//import org.opencv.objdetect.*;
+import org.opencv.objdetect.*;
 
 /**
 * Pipeline class.
@@ -43,14 +43,14 @@ public class Pipeline implements VisionPipeline {
 	@Override	public void process(Mat source0) {
 		// Step Blur0:
 		Mat blurInput = source0;
-		BlurType blurType = BlurType.get("Median Filter");
+		BlurType blurType = BlurType.get("Box Blur");
 		double blurRadius = 0.0;
 		blur(blurInput, blurType, blurRadius, blurOutput);
 
 		// Step HSV_Threshold0:
 		Mat hsvThresholdInput = blurOutput;
-		double[] hsvThresholdHue = {74.46043165467626, 90.92150170648463};
-		double[] hsvThresholdSaturation = {142.17625899280577, 255.0};
+		double[] hsvThresholdHue = {71.22302158273381, 97.06484641638225};
+		double[] hsvThresholdSaturation = {174.28057553956833, 255.0};
 		double[] hsvThresholdValue = {38.98381294964029, 255.0};
 		hsvThreshold(hsvThresholdInput, hsvThresholdHue, hsvThresholdSaturation, hsvThresholdValue, hsvThresholdOutput);
 
@@ -61,14 +61,14 @@ public class Pipeline implements VisionPipeline {
 
 		// Step Filter_Contours0:
 		ArrayList<MatOfPoint> filterContoursContours = findContoursOutput;
-		double filterContoursMinArea = 125.0;
+		double filterContoursMinArea = 60.0;
 		double filterContoursMinPerimeter = 0;
 		double filterContoursMinWidth = 10.0;
 		double filterContoursMaxWidth = 1000;
-		double filterContoursMinHeight = 11.0;
+		double filterContoursMinHeight = 15.0;
 		double filterContoursMaxHeight = 1000;
 		double[] filterContoursSolidity = {0, 100};
-		double filterContoursMaxVertices = 100.0;
+		double filterContoursMaxVertices = 200.0;
 		double filterContoursMinVertices = 0;
 		double filterContoursMinRatio = 0;
 		double filterContoursMaxRatio = 1000;
