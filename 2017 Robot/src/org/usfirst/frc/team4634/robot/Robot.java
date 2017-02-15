@@ -19,6 +19,7 @@ import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.CameraServer;
 //import edu.wpi.first.wpilibj.vision.VisionRunner;
 import edu.wpi.first.wpilibj.vision.VisionThread;
+//import edu.wpi.first.wpilibj.Solenoid;
 import com.ctre.CANTalon;
 //import edu.wpi.first.wpilibj.AnalogInput;
 
@@ -43,6 +44,7 @@ public class Robot extends IterativeRobot {
 	private final Object imgLock = new Object();
 	Boolean gearPlaced;
 	
+	//Solenoid gearSolenoid;
     Command autonomousCommand;
     RobotDrive myRobot; //the robot's driving functionality
     Timer timer; //a timer that counts in seconds
@@ -51,7 +53,7 @@ public class Robot extends IterativeRobot {
     XboxController driveXbox; //driver's controller
     XboxController mechanismXbox; //mechanism control person's controller
     VictorSP leftRear, leftFront, rightRear, rightFront;
-    CANTalon middleMotor; //middle strafing motor
+    CANTalon middleMotor, intakeMotor; //middle strafing motor
     boolean brakeYes;
     SendableChooser chooser;
     
@@ -75,6 +77,8 @@ public class Robot extends IterativeRobot {
         mechanismXbox = new XboxController(1);
         brakeYes = true;
         middleMotor = new CANTalon(2);
+        intakeMotor = new CANTalon(1);
+        //gearSolenoid = new Solenoid(1);
         SmartDashboard.putData("Auto mode", chooser);        
         UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
         camera.setResolution(IMG_WIDTH, IMG_HEIGHT);
@@ -152,6 +156,7 @@ public class Robot extends IterativeRobot {
         double leftX = driveXbox.getX1();
         myRobot.arcadeDrive(throttle(), leftX, true);
         middleMotor.set(rightX);
+        intake();
         if (driveXbox.getRawButton(6)) {
         	System.out.println(brakeYes);
         	brakeYes = !brakeYes;
@@ -171,6 +176,12 @@ public class Robot extends IterativeRobot {
             return(-driveXbox.getLeftTrigger());
         } else {
             return 0;
+        }
+    }
+    
+    public void intake() {
+    	if (driveXbox.getRawButton(1)) {
+    		intakeMotor.set(1.0);
         }
     }
 
