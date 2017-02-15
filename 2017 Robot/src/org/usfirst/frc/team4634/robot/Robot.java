@@ -44,7 +44,6 @@ public class Robot extends IterativeRobot {
 	Boolean gearPlaced;
 	
     Command autonomousCommand;
-    
     RobotDrive myRobot; //the robot's driving functionality
     Timer timer; //a timer that counts in seconds
     UltrasonicRangeFinder rangefinder; //the ultrasonic rangefinder, tells you how far the nearest object in front is
@@ -71,7 +70,6 @@ public class Robot extends IterativeRobot {
     	myRobot = new RobotDrive(0,1);
     	timer = new Timer();        
         gearPlaced = true;
-        
         rangefinder = new RangeFinding(sensor);
         driveXbox = new XboxController(0);
         mechanismXbox = new XboxController(1);
@@ -102,7 +100,7 @@ public class Robot extends IterativeRobot {
         autonomousCommand = (Command) chooser.getSelected();    	
     	// schedule the autonomous command (example)
         if (autonomousCommand != null) autonomousCommand.start();        
-        driveForTime(5.0);
+        driveForTime(5.0, 0.75);
         Timer turningTimer = new Timer();
         turningTimer.reset();
         turningTimer.start();
@@ -134,10 +132,9 @@ public class Robot extends IterativeRobot {
         }
     	if (rangefinder.getRange() < 10.0 && gearPlaced == false) {
     		gearPlaced = true;
-    		myRobot.drive(0.0, 0.0);
-    		unlock();
+    		driveForTime(2.0, 0.0);
     		reverse(2.0);
-    		lock();
+    		
     	}    	
     }
 
@@ -177,23 +174,15 @@ public class Robot extends IterativeRobot {
         }
     }
 
-    public void unlock() {
-        //unlocks mechanism for gears
-    }
-
-    public void lock() {
-        //locks mechanism for gears
-    }
-
     //drives forward for a specified amount of time
-    public void driveForTime(double time) {
+    public void driveForTime(double time, double speed) {
     	if (rangefinder.getRange() < 10.0) {
     		myRobot.drive(0.0, 0.0);
     	}
     	timer.reset();
         timer.start();
     	while (timer.get() < time) {
-    		myRobot.drive(0.75, 0.0);
+    		myRobot.drive(speed, 0.0);
     	}
     }    
     
