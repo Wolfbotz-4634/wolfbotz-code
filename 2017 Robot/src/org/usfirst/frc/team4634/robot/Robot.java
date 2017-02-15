@@ -166,6 +166,7 @@ public class Robot extends IterativeRobot {
         		System.out.println("shit");
         	}
         }
+        SmartDashboard.putNumber("Distance", rangefinder.getRange());
     }
 
     //controls throttle: right trigger to go forward, left trigger to reverse
