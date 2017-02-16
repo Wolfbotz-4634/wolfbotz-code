@@ -69,15 +69,14 @@ public class Robot extends IterativeRobot {
     	chooser = new SendableChooser();
     	oi = new OI();
     	
-    	myRobot = new RobotDrive(0,1);
+    	myRobot = new RobotDrive(0,1,2,3);
     	timer = new Timer();        
         gearPlaced = true;
         rangefinder = new RangeFinding(sensor);
         driveXbox = new XboxController(0);
         mechanismXbox = new XboxController(1);
         brakeYes = true;
-        middleMotor = new CANTalon(2);
-        intakeMotor = new CANTalon(1);
+        middleMotor = new CANTalon(4);
         //gearSolenoid = new Solenoid(1);
         SmartDashboard.putData("Auto mode", chooser);        
         UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
