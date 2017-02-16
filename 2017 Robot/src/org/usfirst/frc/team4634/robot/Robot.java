@@ -202,7 +202,7 @@ public class Robot extends IterativeRobot {
     	timer.reset();
         timer.start();
     	while (timer.get() < time) {
-    		myRobot.drive(-0.75, 0.0);
+    		myRobot.drive(-0.40, 0.0);
     	}
     }
       
