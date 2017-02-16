@@ -53,6 +53,12 @@ public abstract class UltrasonicRangeFinder {
 	 * @return The range in inches
 	 */
 	public double getRange(){
-		return (sensor.getVoltage() - zeroPos) / voltsPerInch;
+		//Double range = ((sensor.getVoltage() - zeroPos) / voltsPerInch);
+		/*if (range  != null) {
+			return (sensor.getVoltage() - zeroPos) / voltsPerInch;
+		} else {
+			return 0.0;
+		}*/
+		return 0;
 	}
 }

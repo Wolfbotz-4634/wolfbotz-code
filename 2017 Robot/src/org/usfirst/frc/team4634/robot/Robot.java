@@ -20,7 +20,8 @@ import edu.wpi.first.wpilibj.CameraServer;
 //import edu.wpi.first.wpilibj.vision.VisionRunner;
 import edu.wpi.first.wpilibj.vision.VisionThread;
 //import edu.wpi.first.wpilibj.Solenoid;
-import com.ctre.CANTalon;
+//import com.ctre.CANTalon;
+import edu.wpi.first.wpilibj.Talon;
 //import edu.wpi.first.wpilibj.AnalogInput;
 
 
@@ -53,7 +54,7 @@ public class Robot extends IterativeRobot {
     XboxController driveXbox; //driver's controller
     XboxController mechanismXbox; //mechanism control person's controller
     VictorSP leftRear, leftFront, rightRear, rightFront;
-    CANTalon middleMotor, intakeMotor; //middle strafing motor
+    Talon middleMotor, intakeMotor; //middle strafing motor
     boolean brakeYes;
     SendableChooser chooser;
     
@@ -65,10 +66,10 @@ public class Robot extends IterativeRobot {
      */
     @Override
     public void robotInit() {
-    	chooser.addDefault("Default Auto", new ExampleCommand());
+    	
     	chooser = new SendableChooser();
     	oi = new OI();
-    	
+    	chooser.addDefault("Default Auto", new ExampleCommand());
     	myRobot = new RobotDrive(0,1,2,3);
     	timer = new Timer();        
         gearPlaced = true;
@@ -76,7 +77,7 @@ public class Robot extends IterativeRobot {
         driveXbox = new XboxController(0);
         mechanismXbox = new XboxController(1);
         brakeYes = true;
-        middleMotor = new CANTalon(4);
+        middleMotor = new Talon(4);
         //gearSolenoid = new Solenoid(1);
         SmartDashboard.putData("Auto mode", chooser);        
         UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
@@ -91,12 +92,6 @@ public class Robot extends IterativeRobot {
             }
         });
         visionThread.start();
-        /* Run GRIP in a new process */
-        try {
-            new ProcessBuilder("/home/lvuser/grip").inheritIO().start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public void autonomousInit() { //currently configured for far right side start
@@ -146,7 +141,7 @@ public class Robot extends IterativeRobot {
         // teleop starts running. If you want the autonomous to 
         // continue until interrupted by another command, remove
         // this line or comment it out.
-        if (autonomousCommand != null) autonomousCommand.cancel();        
+        if (autonomousCommand != null) autonomousCommand.cancel();  
     }
 
     public void teleopPeriodic() {
@@ -154,7 +149,8 @@ public class Robot extends IterativeRobot {
         double rightX = driveXbox.getX2();
         double leftX = driveXbox.getX1();
         myRobot.arcadeDrive(throttle(), leftX, true);
-        middleMotor.set(rightX);
+        System.out.println(rightX);
+        middleMotor.set(-rightX);
         intake();
         if (driveXbox.getRawButton(6)) {
         	System.out.println(brakeYes);
@@ -171,9 +167,9 @@ public class Robot extends IterativeRobot {
     //controls throttle: right trigger to go forward, left trigger to reverse
     public double throttle() {
         if (driveXbox.getRightTrigger() > 0.1) {
-            return (driveXbox.getRightTrigger());
+            return (-driveXbox.getRightTrigger());
         } else if (driveXbox.getLeftTrigger() > 0.1){
-            return(-driveXbox.getLeftTrigger());
+            return(driveXbox.getLeftTrigger());
         } else {
             return 0;
         }
