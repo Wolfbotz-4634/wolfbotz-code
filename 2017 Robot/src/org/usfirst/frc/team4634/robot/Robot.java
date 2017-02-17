@@ -1,7 +1,6 @@
 package org.usfirst.frc.team4634.robot;
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.IterativeRobot;
-import java.io.IOException;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.Timer;
@@ -12,16 +11,16 @@ import org.usfirst.frc.team4634.robot.commands.ExampleCommand;
 import org.usfirst.frc.team4634.robot.subsystems.ExampleSubsystem;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import java.util.concurrent.TimeUnit;
+//import java.util.concurrent.TimeUnit;
 import org.opencv.core.Rect;
 import org.opencv.imgproc.Imgproc;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.CameraServer;
 //import edu.wpi.first.wpilibj.vision.VisionRunner;
 import edu.wpi.first.wpilibj.vision.VisionThread;
-//import edu.wpi.first.wpilibj.Solenoid;
-//import com.ctre.CANTalon;
+import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Talon;
+import edu.wpi.first.wpilibj.Joystick;
 //import edu.wpi.first.wpilibj.AnalogInput;
 
 
@@ -43,18 +42,18 @@ public class Robot extends IterativeRobot {
 	private VisionThread visionThread;
 	private double centerX = 0.0;	
 	private final Object imgLock = new Object();
-	Boolean gearPlaced;
-	
-	//Solenoid gearSolenoid;
+	Boolean gearPlaced;	
+	Solenoid rangeFinderPower;
     Command autonomousCommand;
     RobotDrive myRobot; //the robot's driving functionality
     Timer timer; //a timer that counts in seconds
     UltrasonicRangeFinder rangefinder; //the ultrasonic rangefinder, tells you how far the nearest object in front is
     AnalogInput sensor; //the analog input of the rangefinder
-    XboxController driveXbox; //driver's controller
-    XboxController mechanismXbox; //mechanism control person's controller
+    Joystick driveStick, mechanismStick;
+    //XboxController driveXbox, mechanismXbox; //driver's controller, mechanism control's controller
+    
     VictorSP leftRear, leftFront, rightRear, rightFront;
-    Talon middleMotor, intakeMotor; //middle strafing motor
+    Talon middleMotor, shootingMotor, climbingMotor; //middle strafing motor
     boolean brakeYes;
     SendableChooser chooser;
     
@@ -74,11 +73,16 @@ public class Robot extends IterativeRobot {
     	timer = new Timer();        
         gearPlaced = true;
         rangefinder = new RangeFinding(sensor);
-        driveXbox = new XboxController(0);
-        mechanismXbox = new XboxController(1);
-        brakeYes = true;
+        driveStick = new Joystick(0);
+        mechanismStick = new Joystick(1);
+        
+        /*driveXbox = new XboxController(0);
+        mechanismXbox = new XboxController(1);*/
         middleMotor = new Talon(4);
-        //gearSolenoid = new Solenoid(1);
+        shootingMotor = new Talon(5);
+        climbingMotor = new Talon(6);
+        rangeFinderPower = new Solenoid(0);
+        rangeFinderPower.set(true);
         SmartDashboard.putData("Auto mode", chooser);        
         UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
         camera.setResolution(IMG_WIDTH, IMG_HEIGHT);
@@ -95,19 +99,22 @@ public class Robot extends IterativeRobot {
     }
 
     public void autonomousInit() { //currently configured for far right side start
-        autonomousCommand = (Command) chooser.getSelected();    	
-    	// schedule the autonomous command (example)
+    	rangeFinderPower.set(true);
+        autonomousCommand = (Command) chooser.getSelected();
         if (autonomousCommand != null) autonomousCommand.start();        
-        driveForTime(5.0, 0.75);
+        
+        //far right side start
+        driveForTime(5.0, 1.0);
         Timer turningTimer = new Timer();
         turningTimer.reset();
         turningTimer.start();
         while (turningTimer.get() < 2.0) {
         	myRobot.arcadeDrive(0.0, -1.0);
         }
+        driveForTime(1.0, 0.75);
         
         /* if middle start, remove all code in autonomousperiodic pertaining to alignment, just use:
-    	while (rangefinder.getRange() > 10.0) {
+    	while (rangefinder.getRange() > 6.5) {
     		myRobot.drive(0.75, 0.0);
      	}
      	myRobot.drive(0.0, 0.0);
@@ -120,52 +127,53 @@ public class Robot extends IterativeRobot {
          *  it to a value that is zero when the rectangle is centered in the image and positive or negative when
          *   the target center is on the left or right side of the frame. That value is used to steer the robot 
          *   towards the target.*/
+        
+        //far right side start, remove if middle
         if (! gearPlaced) {
         	double centerX;
         	synchronized (imgLock) {
         		centerX = this.centerX;
         	}
         	double turn = centerX - (IMG_WIDTH / 2);
-        	myRobot.arcadeDrive(0.6, turn * 0.005);
+        	myRobot.arcadeDrive(-0.6, turn * 0.005);
         }
-    	if (rangefinder.getRange() < 10.0 && gearPlaced == false) {
-    		gearPlaced = true;
+        
+        //works for both
+    	if (rangefinder.getRange() < 6.5 && gearPlaced == false) {    		
     		driveForTime(2.0, 0.0);
     		reverse(2.0);
+    		gearPlaced = true;
     		
-    	}    	
+    	}
     }
 
-    public void teleopInit() {
-		// This makes sure that the autonomous stops running when
-        // teleop starts running. If you want the autonomous to 
-        // continue until interrupted by another command, remove
-        // this line or comment it out.
-        if (autonomousCommand != null) autonomousCommand.cancel();  
+    public void teleopInit() {    	
+        if (autonomousCommand != null) autonomousCommand.cancel(); //don't touch
+        
+        rangeFinderPower.set(true);
     }
 
     public void teleopPeriodic() {
-        Scheduler.getInstance().run();
-        double rightX = driveXbox.getX2();
+        Scheduler.getInstance().run();       
+        myRobot.arcadeDrive(driveStick.getY(), driveStick.getX());
+        middleMotor.set(-mechanismStick.getX());
+        
+        if (rangefinder.getRange() == 0) {
+        	SmartDashboard.putString("Distance", "Out of range");
+        } else {
+        	SmartDashboard.putNumber("Distance", rangefinder.getRange());
+        }
+        
+        //Xbox code
+        /*double rightX = driveXbox.getX2();
         double leftX = driveXbox.getX1();
         myRobot.arcadeDrive(throttle(), leftX, true);
         System.out.println(rightX);
-        middleMotor.set(-rightX);
-        intake();
-        if (driveXbox.getRawButton(6)) {
-        	System.out.println(brakeYes);
-        	brakeYes = !brakeYes;
-        	try {
-        		TimeUnit.MILLISECONDS.sleep(200);
-        	} catch(Exception InterruptedException) {
-        		System.out.println("shit");
-        	}
-        }
-        SmartDashboard.putNumber("Distance", rangefinder.getRange());
+        middleMotor.set(-rightX);*/
     }
 
     //controls throttle: right trigger to go forward, left trigger to reverse
-    public double throttle() {
+    /*public double throttle() {
         if (driveXbox.getRightTrigger() > 0.1) {
             return (-driveXbox.getRightTrigger());
         } else if (driveXbox.getLeftTrigger() > 0.1){
@@ -173,17 +181,11 @@ public class Robot extends IterativeRobot {
         } else {
             return 0;
         }
-    }
-    
-    public void intake() {
-    	if (driveXbox.getRawButton(1)) {
-    		intakeMotor.set(1.0);
-        }
-    }
+    }*/
 
     //drives forward for a specified amount of time
     public void driveForTime(double time, double speed) {
-    	if (rangefinder.getRange() < 10.0) {
+    	if (rangefinder.getRange() < 6.5) {
     		myRobot.drive(0.0, 0.0);
     	}
     	timer.reset();

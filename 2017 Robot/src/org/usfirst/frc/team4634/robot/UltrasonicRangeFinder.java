@@ -37,28 +37,30 @@ public abstract class UltrasonicRangeFinder {
 	/**
 	 * Sets the zero point for the sensor at the current distance
 	 */
-	public void zero(){
+	/*public void zero(){
 		zeroPos = sensor.getVoltage();
-	}
+	}*/
 	
 	/**
 	 * Resets the zero point to 0
 	 */
-	public void resetZero(){
+	/*public void resetZero(){
 		zeroPos = 0;
-	}
+	}*/
 	
 	/**
 	 * Gets the range in inches to the nearest object
 	 * @return The range in inches
 	 */
 	public double getRange(){
-		//Double range = ((sensor.getVoltage() - zeroPos) / voltsPerInch);
-		/*if (range  != null) {
-			return (sensor.getVoltage() - zeroPos) / voltsPerInch;
-		} else {
+		if (! (sensor.getVoltage() >= 0.0)) {
+			throw new IllegalArgumentException("It's null");
+		}
+		if (sensor.getVoltage() == 0.0) {
 			return 0.0;
-		}*/
-		return 0;
+		} else {
+			return (sensor.getVoltage() - zeroPos) / voltsPerInch;
+		}
+		
 	}
 }
