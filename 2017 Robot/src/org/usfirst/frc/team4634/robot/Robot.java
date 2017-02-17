@@ -163,7 +163,12 @@ public class Robot extends IterativeRobot {
         } else {
         	SmartDashboard.putNumber("Distance", rangefinder.getRange());
         }
-        
+        if (mechanismStick.getRawButton(2)) {
+        	climbingMotor.set(1.0);
+        }
+        if (mechanismStick.getRawButton(1)) {
+        	shootingMotor.set(1.0);
+        }
         //Xbox code
         /*double rightX = driveXbox.getX2();
         double leftX = driveXbox.getX1();
