@@ -41,13 +41,17 @@ public class Robot extends IterativeRobot {
 	private double centerX = 0.0;	
 	private final Object imgLock = new Object();
 	Boolean gearPlaced;	
-	Solenoid rangeFinderPower, portOne;
     Command autonomousCommand;
     RobotDrive myRobot; //the robot's driving functionality
     Timer timer; //a timer that counts in seconds
     Joystick driveStick, mechanismStick;
     //XboxController driveXbox, mechanismXbox; //driver's controller, mechanism control's controller
     
+    //possibly unnecessary rangefinder stuff
+    AnalogInput sensor;
+    UltrasonicRangeFinder rangefinder;
+    Solenoid rangeFinderPower;
+
     VictorSP leftRear, leftFront, rightRear, rightFront;
     Talon middleMotor, shootingMotor, climbingMotor; //middle strafing motor
     boolean brakeYes;
@@ -61,9 +65,15 @@ public class Robot extends IterativeRobot {
      */
     @Override
     public void robotInit() {
-    	chooser = new SendableChooser();
+        chooser = new SendableChooser();
     	oi = new OI();
     	chooser.addDefault("Default Auto", new ExampleCommand());
+
+        sensor = new AnalogInput(0);
+        rangefinder = new RangeFinding(sensor);
+        rangeFinderPower = new Solenoid(0);
+        rangeFinderPower.set(true);
+    	
     	myRobot = new RobotDrive(0,1,2,3);
     	timer = new Timer();        
         gearPlaced = true;
@@ -98,22 +108,18 @@ public class Robot extends IterativeRobot {
         autonomousCommand = (Command) chooser.getSelected();
         if (autonomousCommand != null) autonomousCommand.start();        
         
-        //far right side start
+        //FAR RIGHT START
         driveForTime(5.0, 1.0);
         Timer turningTimer = new Timer();
         turningTimer.reset();
         turningTimer.start();
-        while (turningTimer.get() < 2.0) {
+        while (turningTimer.get() < 1.5) {
         	myRobot.arcadeDrive(0.0, -1.0);
         }
         driveForTime(1.0, 0.75);
-        
-        /* if middle start, remove all code in autonomousperiodic pertaining to alignment, just use:
-    	while (rangefinder.getRange() > 6.0) {
-    		myRobot.drive(0.75, 0.0);
-     	}
-     	myRobot.drive(0.0, 0.0);
-    	*/
+
+        //MIDDLE START
+        //driveForTime(3.0, 1.0);    
     }
 
     public void autonomousPeriodic() { 
@@ -123,15 +129,39 @@ public class Robot extends IterativeRobot {
          *   the target center is on the left or right side of the frame. That value is used to steer the robot 
          *   towards the target.*/
         
-        //far right side start, remove if middle
+        //FAR RIGHT START
         if (! gearPlaced) {
         	double centerX;
         	synchronized (imgLock) {
         		centerX = this.centerX;
         	}
         	double turn = centerX - (IMG_WIDTH / 2);
-        	myRobot.arcadeDrive(-0.6, turn * 0.005);
+        	if (turn > 0) {
+                myRobot.arcadeDrive(-0.6, turn * 0.005);
+            } /*else {
+                while (rangefinder.getRange() > 6.0) {
+                    myRobot.drive(0.75, 0.0);
+                    myRobot.drive(0.0, 0.0);
+                    gearPlaced = true;
+                    driveForTime(1.0, -0.75);
+                }   //USE ONLY IF WE HAVE A RANGEFINDER
+            }*/ else {
+                //TBD - IF WE DON'T HAVE A RANGEFINDER LMAO
+            }
+        } else {
+            //What do we do once the gear has been placed
         }
+
+        //MIDDLE START
+        //if the rangefinder works/we have one
+    	/*while (rangefinder.getRange() > 6.0) {
+    		myRobot.drive(0.75, 0.0);
+     	}
+     	myRobot.drive(0.0, 0.0);
+
+        //if we don't have one:
+        //TBD
+    	*/
         
         
     }
@@ -139,7 +169,6 @@ public class Robot extends IterativeRobot {
     public void teleopInit() {    	
         if (autonomousCommand != null) autonomousCommand.cancel(); //don't touch
         portOne.set(true);
-        rangeFinderPower.set(true);
     }
 
     public void teleopPeriodic() {
@@ -152,12 +181,6 @@ public class Robot extends IterativeRobot {
         if (mechanismStick.getRawButton(1)) {
         	shootingMotor.set(1.0);
         }
-        //Xbox code
-        /*double rightX = driveXbox.getX2();
-        double leftX = driveXbox.getX1();
-        myRobot.arcadeDrive(throttle(), leftX, true);
-        System.out.println(rightX);
-        middleMotor.set(-rightX);*/
     }
     
     public void middleMotor() {
@@ -175,17 +198,6 @@ public class Robot extends IterativeRobot {
     	}
     	middleMotor.set(0);
     }
-
-    //controls throttle: right trigger to go forward, left trigger to reverse
-    /*public double throttle() {
-        if (driveXbox.getRightTrigger() > 0.1) {
-            return (-driveXbox.getRightTrigger());
-        } else if (driveXbox.getLeftTrigger() > 0.1){
-            return(driveXbox.getLeftTrigger());
-        } else {
-            return 0;
-        }
-    }*/
 
     //drives forward for a specified amount of time
     public void driveForTime(double time, double speed) {
