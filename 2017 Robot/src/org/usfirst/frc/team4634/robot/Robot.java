@@ -16,12 +16,12 @@ import org.opencv.core.Rect;
 import org.opencv.imgproc.Imgproc;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.CameraServer;
-//import edu.wpi.first.wpilibj.vision.VisionRunner;
+import edu.wpi.first.wpilibj.vision.VisionRunner;
 import edu.wpi.first.wpilibj.vision.VisionThread;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Joystick;
-//import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.AnalogInput;
 
 
 
@@ -43,12 +43,10 @@ public class Robot extends IterativeRobot {
 	private double centerX = 0.0;	
 	private final Object imgLock = new Object();
 	Boolean gearPlaced;	
-	Solenoid rangeFinderPower;
+	Solenoid rangeFinderPower, portOne;
     Command autonomousCommand;
     RobotDrive myRobot; //the robot's driving functionality
     Timer timer; //a timer that counts in seconds
-    UltrasonicRangeFinder rangefinder; //the ultrasonic rangefinder, tells you how far the nearest object in front is
-    AnalogInput sensor; //the analog input of the rangefinder
     Joystick driveStick, mechanismStick;
     //XboxController driveXbox, mechanismXbox; //driver's controller, mechanism control's controller
     
@@ -65,14 +63,12 @@ public class Robot extends IterativeRobot {
      */
     @Override
     public void robotInit() {
-    	
     	chooser = new SendableChooser();
     	oi = new OI();
     	chooser.addDefault("Default Auto", new ExampleCommand());
     	myRobot = new RobotDrive(0,1,2,3);
     	timer = new Timer();        
         gearPlaced = true;
-        rangefinder = new RangeFinding(sensor);
         driveStick = new Joystick(0);
         mechanismStick = new Joystick(1);
         
@@ -81,25 +77,26 @@ public class Robot extends IterativeRobot {
         middleMotor = new Talon(4);
         shootingMotor = new Talon(5);
         climbingMotor = new Talon(6);
-        rangeFinderPower = new Solenoid(0);
-        rangeFinderPower.set(true);
-        SmartDashboard.putData("Auto mode", chooser);        
+        SmartDashboard.putData("Auto mode", chooser);
         UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
         camera.setResolution(IMG_WIDTH, IMG_HEIGHT);
         
         visionThread = new VisionThread(camera, new Pipeline(), pipeline -> {
-            if (!pipeline.filterContoursOutput().isEmpty()) {
-                Rect r = Imgproc.boundingRect(pipeline.filterContoursOutput().get(0));
-                synchronized (imgLock) {
-                    centerX = r.x + (r.width / 2);
+        	visionThread.setDaemon(true);
+        	while (!Thread.interrupted()) {
+        		if (!pipeline.filterContoursOutput().isEmpty()) {
+                    Rect r = Imgproc.boundingRect(pipeline.filterContoursOutput().get(0));
+                    synchronized (imgLock) {
+                        centerX = r.x + (r.width / 2);
+                    }
                 }
-            }
+        	}
         });
         visionThread.start();
     }
 
     public void autonomousInit() { //currently configured for far right side start
-    	rangeFinderPower.set(true);
+    	 portOne.set(true);
         autonomousCommand = (Command) chooser.getSelected();
         if (autonomousCommand != null) autonomousCommand.start();        
         
@@ -114,7 +111,7 @@ public class Robot extends IterativeRobot {
         driveForTime(1.0, 0.75);
         
         /* if middle start, remove all code in autonomousperiodic pertaining to alignment, just use:
-    	while (rangefinder.getRange() > 6.5) {
+    	while (rangefinder.getRange() > 6.0) {
     		myRobot.drive(0.75, 0.0);
      	}
      	myRobot.drive(0.0, 0.0);
@@ -138,31 +135,19 @@ public class Robot extends IterativeRobot {
         	myRobot.arcadeDrive(-0.6, turn * 0.005);
         }
         
-        //works for both
-    	if (rangefinder.getRange() < 6.5 && gearPlaced == false) {    		
-    		driveForTime(2.0, 0.0);
-    		reverse(2.0);
-    		gearPlaced = true;
-    		
-    	}
+        
     }
 
     public void teleopInit() {    	
         if (autonomousCommand != null) autonomousCommand.cancel(); //don't touch
-        
+        portOne.set(true);
         rangeFinderPower.set(true);
     }
 
     public void teleopPeriodic() {
         Scheduler.getInstance().run();       
-        myRobot.arcadeDrive(driveStick.getY(), driveStick.getX());
-        middleMotor.set(-mechanismStick.getX());
-        
-        if (rangefinder.getRange() == 0) {
-        	SmartDashboard.putString("Distance", "Out of range");
-        } else {
-        	SmartDashboard.putNumber("Distance", rangefinder.getRange());
-        }
+        myRobot.arcadeDrive(driveStick.getY(), -driveStick.getX());
+        middleMotor();
         if (mechanismStick.getRawButton(2)) {
         	climbingMotor.set(1.0);
         }
@@ -175,6 +160,22 @@ public class Robot extends IterativeRobot {
         myRobot.arcadeDrive(throttle(), leftX, true);
         System.out.println(rightX);
         middleMotor.set(-rightX);*/
+    }
+    
+    public void middleMotor() {
+    	while (driveStick.getRawButton(8)) {
+    		middleMotor.set(0.50);
+    	}
+    	while (driveStick.getRawButton(9)) {
+    		middleMotor.set(-0.50);
+    	}
+    	while (mechanismStick.getRawButton(8)) {
+    		middleMotor.set(0.50);
+    	}
+    	while (mechanismStick.getRawButton(9)) {
+    		middleMotor.set(-0.50);
+    	}
+    	middleMotor.set(0);
     }
 
     //controls throttle: right trigger to go forward, left trigger to reverse
@@ -190,9 +191,6 @@ public class Robot extends IterativeRobot {
 
     //drives forward for a specified amount of time
     public void driveForTime(double time, double speed) {
-    	if (rangefinder.getRange() < 6.5) {
-    		myRobot.drive(0.0, 0.0);
-    	}
     	timer.reset();
         timer.start();
     	while (timer.get() < time) {
