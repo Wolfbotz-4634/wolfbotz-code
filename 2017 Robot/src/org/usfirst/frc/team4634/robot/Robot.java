@@ -20,7 +20,7 @@ import edu.wpi.first.wpilibj.vision.VisionThread;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Joystick;
-
+import edu.wpi.first.wpilibj.AnalogInput;
 
 
 /**
@@ -68,11 +68,12 @@ public class Robot extends IterativeRobot {
         chooser = new SendableChooser();
     	oi = new OI();
     	chooser.addDefault("Default Auto", new ExampleCommand());
-
+    	
+    	/*
         sensor = new AnalogInput(0);
-        rangefinder = new RangeFinding(sensor);
+        rangefinder = new RangeFinding(sensor);      
         rangeFinderPower = new Solenoid(0);
-        rangeFinderPower.set(true);
+        rangeFinderPower.set(true); */ //ONLY INITIALIZE IF WE'RE USING AN ANALOG RANGEFINDER
     	
     	myRobot = new RobotDrive(0,1,2,3);
     	timer = new Timer();        
@@ -104,7 +105,6 @@ public class Robot extends IterativeRobot {
     }
 
     public void autonomousInit() { //currently configured for far right side start
-    	 portOne.set(true);
         autonomousCommand = (Command) chooser.getSelected();
         if (autonomousCommand != null) autonomousCommand.start();        
         
@@ -168,7 +168,6 @@ public class Robot extends IterativeRobot {
 
     public void teleopInit() {    	
         if (autonomousCommand != null) autonomousCommand.cancel(); //don't touch
-        portOne.set(true);
     }
 
     public void teleopPeriodic() {
