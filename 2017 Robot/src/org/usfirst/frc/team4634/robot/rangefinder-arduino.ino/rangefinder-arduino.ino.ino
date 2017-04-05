@@ -28,5 +28,6 @@ void loop()
     delay(150);
     Serial.print("The distance:");
     Serial.print(RangeInCentimeters,DEC);
+    Serial.write(RangeInCentimeters);
     Serial.print("cm");
 }

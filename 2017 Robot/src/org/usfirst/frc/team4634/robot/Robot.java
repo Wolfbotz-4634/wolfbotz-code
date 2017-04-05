@@ -20,7 +20,6 @@ import edu.wpi.first.wpilibj.vision.VisionThread;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.AnalogInput;
 
 
 /**
@@ -47,9 +46,7 @@ public class Robot extends IterativeRobot {
     Joystick driveStick, mechanismStick;
     //XboxController driveXbox, mechanismXbox; //driver's controller, mechanism control's controller
     
-    //possibly unnecessary rangefinder stuff
-    AnalogInput sensor;
-    UltrasonicRangeFinder rangefinder;
+  
     Solenoid rangeFinderPower;
 
     VictorSP leftRear, leftFront, rightRear, rightFront;
@@ -90,7 +87,7 @@ public class Robot extends IterativeRobot {
         UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
         camera.setResolution(IMG_WIDTH, IMG_HEIGHT);
         
-        visionThread = new VisionThread(camera, new Pipeline(), pipeline -> {
+        visionThread = new VisionThread(camera, new GripPipeline(), pipeline -> {
         	visionThread.setDaemon(true);
         	while (!Thread.interrupted()) {
         		if (!pipeline.filterContoursOutput().isEmpty()) {
@@ -153,14 +150,11 @@ public class Robot extends IterativeRobot {
         }
 
         //MIDDLE START
-        //if the rangefinder works/we have one
-    	/*while (rangefinder.getRange() > 6.0) {
-    		myRobot.drive(0.75, 0.0);
-     	}
-     	myRobot.drive(0.0, 0.0);
 
         //if we don't have one:
         //TBD
+        /*
+        figure out the time lmao
     	*/
         
         
