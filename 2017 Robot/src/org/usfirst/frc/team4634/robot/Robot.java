@@ -113,10 +113,10 @@ public class Robot extends IterativeRobot {
         while (turningTimer.get() < 1.5) {
         	myRobot.arcadeDrive(0.0, -1.0);
         }
-        driveForTime(0.5, 1.0);
+        driveForTime(0.1, 1.0);
 
         //MIDDLE START
-        //driveForTime(3.0, 1.0);    
+        //driveForTime(0.5, 1.0);    
     }
 
     public void autonomousPeriodic() { 
