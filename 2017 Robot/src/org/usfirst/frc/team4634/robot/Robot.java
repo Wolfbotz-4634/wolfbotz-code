@@ -81,8 +81,8 @@ public class Robot extends IterativeRobot {
         /*driveXbox = new XboxController(0);
         mechanismXbox = new XboxController(1);*/
         middleMotor = new Talon(4);
-        shootingMotor = new Talon(5);
-        climbingMotor = new Talon(6);
+        //shootingMotor = new Talon(5);
+        climbingMotor = new Talon(5);
         SmartDashboard.putData("Auto mode", chooser);
         UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
         camera.setResolution(IMG_WIDTH, IMG_HEIGHT);
@@ -106,14 +106,14 @@ public class Robot extends IterativeRobot {
         if (autonomousCommand != null) autonomousCommand.start();        
         
         //FAR RIGHT START
-        driveForTime(5.0, 1.0);
+        driveForTime(1.0, 1.0);
         Timer turningTimer = new Timer();
         turningTimer.reset();
         turningTimer.start();
         while (turningTimer.get() < 1.5) {
         	myRobot.arcadeDrive(0.0, -1.0);
         }
-        driveForTime(1.0, 0.75);
+        driveForTime(0.5, 1.0);
 
         //MIDDLE START
         //driveForTime(3.0, 1.0);    
@@ -143,7 +143,7 @@ public class Robot extends IterativeRobot {
                     driveForTime(1.0, -0.75);
                 }   //USE ONLY IF WE HAVE A RANGEFINDER
             }*/ else {
-                //TBD - IF WE DON'T HAVE A RANGEFINDER LMAO
+                myRobot.drive(0.5, 0.0);
             }
         } else {
             //What do we do once the gear has been placed
@@ -154,7 +154,9 @@ public class Robot extends IterativeRobot {
         //if we don't have one:
         //TBD
         /*
-        figure out the time lmao
+        if (! gearPlaced) {
+        	myRobot.drive(0.5, 0.0;
+        }
     	*/
         
         
@@ -171,23 +173,23 @@ public class Robot extends IterativeRobot {
         if (mechanismStick.getRawButton(2)) {
         	climbingMotor.set(1.0);
         }
-        if (mechanismStick.getRawButton(1)) {
+        /*if (mechanismStick.getRawButton(1)) {
         	shootingMotor.set(1.0);
-        }
+        }*/
     }
     
     public void middleMotor() {
     	while (driveStick.getRawButton(8)) {
-    		middleMotor.set(0.50);
+    		middleMotor.set(1.0);
     	}
     	while (driveStick.getRawButton(9)) {
-    		middleMotor.set(-0.50);
+    		middleMotor.set(-1.0);
     	}
     	while (mechanismStick.getRawButton(8)) {
-    		middleMotor.set(0.50);
+    		middleMotor.set(1.0);
     	}
     	while (mechanismStick.getRawButton(9)) {
-    		middleMotor.set(-0.50);
+    		middleMotor.set(-1.0);
     	}
     	middleMotor.set(0);
     }
