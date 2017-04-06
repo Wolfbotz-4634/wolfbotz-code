@@ -79,7 +79,7 @@ public class Robot extends IterativeRobot {
 		gearPlaced = true;
 		driveStick = new Joystick(0);
 		mechanismStick = new Joystick(1);
-
+		limitSwitch = new DigitalInput(0);
 		/*
 		 * driveXbox = new XboxController(0); mechanismXbox = new
 		 * XboxController(1);
@@ -112,14 +112,14 @@ public class Robot extends IterativeRobot {
 			autonomousCommand.start();
 
 		// FAR RIGHT START
-		driveForTime(0.9, 1.0);
+		driveForTime(0.9, -1.0);
 		Timer turningTimer = new Timer();
 		turningTimer.reset();
 		turningTimer.start();
 		while (turningTimer.get() < 0.25) {
 			myRobot.arcadeDrive(0.0, -0.5);
 		}
-		driveForTime(0.1, 1.0);
+		driveForTime(0.1, -1.0);
 
 		// MIDDLE START
 		// driveForTime(0.75, 1.0);
@@ -139,7 +139,7 @@ public class Robot extends IterativeRobot {
 		if (limitSwitch.get()) {
 			double centerX;
 			synchronized (imgLock) {
-				centerX = this.centerX;
+				centerX = this.centerX + 60;
 			}
 			double turn = centerX - (IMG_WIDTH / 2);
 			if (turn > 0) {
@@ -150,18 +150,19 @@ public class Robot extends IterativeRobot {
 				 * = true; driveForTime(1.0, -0.75); } //USE ONLY IF WE HAVE A
 				 * RANGEFINDER }
 				 */ else {
-				myRobot.drive(0.5, 0.0);
+				myRobot.drive(-0.5, 0.0);
 			}
 		} else {
+		System.out.println("stabbed");
 		// What do we do once the gear has been placed
 		Timer turningTimer = new Timer();
-		reverse(0.5);		
+		reverse(0.5, 0.40);		
 		turningTimer.reset();
 		turningTimer.start();
 		while (turningTimer.get() < 0.25) {
 			myRobot.arcadeDrive(0.0, 0.5);
 		}
-		driveForTime(3.0, 1.0);
+		driveForTime(3.0, -1.0);
 		}
 		// MIDDLE START
 
@@ -169,22 +170,22 @@ public class Robot extends IterativeRobot {
 		// TBD
 
 		/*if (limitSwitch.get()) {
-			myRobot.drive(0.5, 0.0);
+			myRobot.drive(-0.5, 0.0);
 		} else {
 		// What do we do once the gear has been placed
-		reverse(0.5);
+		reverse(0.5, 0.40);	
 		turningTimer.reset();
 		turningTimer.start();
 		while (turningTimer.get() < 0.5) {
 			myRobot.arcadeDrive(0.0, 0.5);
 		}
-		driveForTime(1.0, 1.0);
+		driveForTime(1.0, -1.0);
 		turningTimer.reset();
 		turningTimer.start();
 		while (turningTimer.get() < 0.5) {
 			myRobot.arcadeDrive(0.0, -0.5);
 		}
-		driveForTime(3.0, 1.0);
+		driveForTime(3.0, -1.0);
 		}
 		*/		
 	}
@@ -204,6 +205,9 @@ public class Robot extends IterativeRobot {
 		/*
 		 * if (mechanismStick.getRawButton(1)) { shootingMotor.set(1.0); }
 		 */
+		if (! limitSwitch.get()) {
+			System.out.println("stabbed");
+		}
 	}
 
 	public void middleMotor() {
@@ -232,11 +236,11 @@ public class Robot extends IterativeRobot {
 	}
 
 	// drives in reverse for a specified amount of time
-	public void reverse(double time) {
+	public void reverse(double time, double speed) {
 		timer.reset();
 		timer.start();
 		while (timer.get() < time) {
-			myRobot.drive(-0.40, 0.0);
+			myRobot.drive(speed, 0.0);
 		}
 	}
 
