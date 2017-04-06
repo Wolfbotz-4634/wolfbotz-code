@@ -136,20 +136,42 @@ public class Robot extends IterativeRobot {
 		 */
 
 		// FAR RIGHT START
-		if (limitSwitch.get()) {
+		if (! limitSwitch.get()) {
 			double centerX;
 			synchronized (imgLock) {
-				centerX = this.centerX + 60;
+				centerX = this.centerX - 40;
 			}
 			double turn = centerX - (IMG_WIDTH / 2);
 			if (turn > 0) {
-				myRobot.arcadeDrive(-0.6, turn * 0.005);
-			} /*
-				 * else { while (rangefinder.getRange() > 6.0) {
-				 * myRobot.drive(0.75, 0.0); myRobot.drive(0.0, 0.0); gearPlaced
-				 * = true; driveForTime(1.0, -0.75); } //USE ONLY IF WE HAVE A
-				 * RANGEFINDER }
-				 */ else {
+				myRobot.arcadeDrive(-0.4, turn * 0.005);
+			} else {
+				myRobot.drive(-0.5, 0.0);
+			}
+		} else {
+		System.out.println("stabbed");
+		// What do we do once the gear has been placed
+		Timer turningTimer = new Timer();
+		reverse(0.5, 0.40);		
+		turningTimer.reset();
+		turningTimer.start();
+		while (turningTimer.get() < 0.25) {
+			myRobot.arcadeDrive(0.0, -0.5);
+		}
+		driveForTime(3.0, -1.0);
+		}
+		//END FAR RIGHT SECTION
+		
+		//LEFT START
+		/*
+		if (! limitSwitch.get()) {
+			double centerX;
+			synchronized (imgLock) {
+				centerX = this.centerX - 40;
+			}
+			double turn = centerX - (IMG_WIDTH / 2);
+			if (turn > 0) {
+				myRobot.arcadeDrive(-0.4, turn * 0.005);
+			} else {
 				myRobot.drive(-0.5, 0.0);
 			}
 		} else {
@@ -164,11 +186,10 @@ public class Robot extends IterativeRobot {
 		}
 		driveForTime(3.0, -1.0);
 		}
-		// MIDDLE START
-
-		// if we don't have one:
-		// TBD
-
+		*/
+		//END LEFT START
+		
+		// MIDDLE START HERE: UNCOMMENT THE SLASH/STAR
 		/*if (limitSwitch.get()) {
 			myRobot.drive(-0.5, 0.0);
 		} else {
@@ -177,7 +198,7 @@ public class Robot extends IterativeRobot {
 		turningTimer.reset();
 		turningTimer.start();
 		while (turningTimer.get() < 0.5) {
-			myRobot.arcadeDrive(0.0, 0.5);
+			myRobot.arcadeDrive(0.0, -0.5);
 		}
 		driveForTime(1.0, -1.0);
 		turningTimer.reset();
@@ -187,7 +208,8 @@ public class Robot extends IterativeRobot {
 		}
 		driveForTime(3.0, -1.0);
 		}
-		*/		
+		*/	
+		//END MIDDLE START
 	}
 
 	public void teleopInit() {
@@ -205,7 +227,7 @@ public class Robot extends IterativeRobot {
 		/*
 		 * if (mechanismStick.getRawButton(1)) { shootingMotor.set(1.0); }
 		 */
-		if (! limitSwitch.get()) {
+		if (limitSwitch.get()) {
 			System.out.println("stabbed");
 		}
 	}
